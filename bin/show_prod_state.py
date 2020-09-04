@@ -1,9 +1,9 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
-Query a night (or range of nights) to determine the SN sequences present
-and output a list suitable for mass-submits.
+show_prod_state.py 
+Original:  RAG w/python3 migration Sept 4, 2020.
 
-Currently sequences are always reset to 1 (not elegant as it relies on --exclude
+Polls DESDM (Operations) DB for a given pipeline execution and returns summary of status.
 """
 
 if __name__ == "__main__":
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     import datetime
     import numpy
 
-    parser = argparse.ArgumentParser(description='Produce listing(s) of supernova sets (for submit) from a night range')
+    parser = argparse.ArgumentParser(description='Produce summary of pipeline execution')
     parser.add_argument('-A','--AttemptID',action='store', type=str, default=None, help='PFW Attempt ID')
     parser.add_argument('-r','--ReqNum',   action='store', type=str, default=None, help='Request number')
     parser.add_argument('-u','--UnitName', action='store', type=str, default=None, help='Unit name')
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument('-S', '--Schema',  action='store', type=str, default=None, help='DB schema (do not include \'.\').')
     args = parser.parse_args()
     if (args.verbose > 0):
-        print "Args: ",args
+        print("Args: ",args)
 
     verbose=args.verbose
 #    if (args.verbose):
@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     if (args.AttemptID is None):
         if ((args.ReqNum is None)or(args.UnitName is None)or(args.AttNum is None)):
-            print "Must specify either AttemptID or triplet (ReqNum, UnitName, and AttNum) for query"
+            print("Must specify either AttemptID or triplet (ReqNum, UnitName, and AttNum) for query")
             exit(1)
 
     if (args.Schema is None):
@@ -73,9 +73,9 @@ if __name__ == "__main__":
                 QueryOneLine='sql = '
                 for line in QueryLines:
                     QueryOneLine=QueryOneLine+" "+line.strip()
-                print QueryOneLine
+                print(QueryOneLine)
             if (verbose > 1):
-                print query
+                print(query)
 
         cur.execute(query)
         desc=[d[0].lower() for d in cur.description]
@@ -115,9 +115,9 @@ if __name__ == "__main__":
             QueryOneLine='sql = '
             for line in QueryLines:
                 QueryOneLine=QueryOneLine+" "+line.strip()
-            print QueryOneLine
+            print(QueryOneLine)
         if (verbose > 1):
-            print query
+            print(query)
     cur.execute(query)
     desc=[d[0].lower() for d in cur.description]
 
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     tfirst_submit=None;
     for row in cur:
         rowd=dict(zip(desc,row))
-#        print rowd
+#        print(rowd)
         if (rowd['status'] is None):
             rowd['status']=-1
             rowd['endstate']='processing'
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 #            tmp_dict["tdays"]=-1.
         attempt_list.append(rowd)
 
-#    print attempt_list
+#    print(attempt_list)
 
     print("{:15s} {:6s} {:2s} {:15s} {:15s} {:7s} {:7s} {:8s} {:6s} {:s} ".format('#',' ',' ',' ',' ','  Proc','Elapsed',' ',' ',' '))
     print("{:15s} {:6s} {:2s} {:15s} {:15s} {:7s} {:7s} {:8s} {:6s} {:s} ".format('# fld-band-seq','reqnum','a#','  Submit Time','    End Time','  [s]','  [d]','  State','Status','  Filepath'))
@@ -203,16 +203,16 @@ if __name__ == "__main__":
                     QueryOneLine='sql = '
                     for line in QueryLines:
                         QueryOneLine=QueryOneLine+" "+line.strip()
-                    print QueryOneLine
+                    print(QueryOneLine)
                 if (verbose > 1):
-                    print query
+                    print(query)
             cur.execute(query)
             desc=[d[0].lower() for d in cur.description]
 
             mod_list=[]
             for row in cur:
                 rowd=dict(zip(desc,row))
-#                print rowd
+#                print(rowd)
 
                 for mod in rowd['modulelist'].split(','):
                     proc_dict[proc_attempt][mod]={}
@@ -261,9 +261,9 @@ if __name__ == "__main__":
                     QueryOneLine='sql = '
                     for line in QueryLines:
                         QueryOneLine=QueryOneLine+" "+line.strip()
-                    print QueryOneLine
+                    print(QueryOneLine)
                 if (verbose > 1):
-                    print query
+                    print(query)
             cur.execute(query)
             desc=[d[0].lower() for d in cur.description]
 
@@ -272,10 +272,10 @@ if __name__ == "__main__":
                 rowd=dict(zip(desc,row))
                 execDumpList.append(rowd)
                 
-#                print rowd
+#                print(rowd)
                 mname=rowd['modname'].lower()
                 if (mname not in proc_dict[proc_attempt]):
-                    print "# Warning: Missing module ",mname," (added)"
+                    print("# Warning: Missing module ",mname," (added)")
                     proc_dict[proc_attempt][mname]={}
                     proc_dict[proc_attempt][mname]['execs']=[]
                     proc_dict[proc_attempt]['modlist'].append(mname)
@@ -301,11 +301,11 @@ if __name__ == "__main__":
                             proc_dict[proc_attempt][mname][ename]['maxrss'].append(rowd['maxrss']/1024.)    
                         if (rowd['walltime'] is not None):
                             proc_dict[proc_attempt][mname][ename]['walltime'].append(24.*3600.*rowd['walltime'])    
-#                        print rowd['t.start_time'],rowd['end_time'],rowd['exec_host']
+#                        print(rowd['t.start_time'],rowd['end_time'],rowd['exec_host'])
                 else:
                     proc_dict[proc_attempt][mname][ename]['proc']=proc_dict[proc_attempt][mname][ename]['proc']+1
                     proc_dict[proc_attempt][mname][ename]['proc_jk'].append(rowd['jobkeys'])
-#                    print rowd['jobkeys']
+#                    print(rowd['jobkeys'])
             mod_list=[]
             mod_unfinished=0
             for mod in proc_dict[proc_attempt]['modlist']:
@@ -411,6 +411,6 @@ if __name__ == "__main__":
                         wallval=cwall))
 #
 #                
-#               print attempt['stime']
+#               print(attempt['stime'])
 
     exit(0)

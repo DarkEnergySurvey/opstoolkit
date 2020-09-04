@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
 Query a night to determine the observations present.  Output can be to 
 STDOUT (default) and/or to a file.  Terse output (-t) is also possible, 
@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     import argparse
     import os
-    from despydb import DesDbi 
+    import despydb.desdbi
     import stat
     import time
     import csv
@@ -28,10 +28,10 @@ if __name__ == "__main__":
     parser.add_argument('-S', '--Schema',  action='store', type=str, default=None, help='DB schema (do not include \'.\').')
     args = parser.parse_args()
     if (args.verbose):
-    	print "Args: ",args
+        print("Args: ",args)
 
     if (args.night is None):
-    	print "Must specify night (-n) for query"
+        print("Must specify night (-n) for query")
         exit(1)
     nite=args.night
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
     cur = dbh.cursor()
 
 #
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     query = """select %s from %sexposure e where e.nite='%s' order by e.mjd_obs  """ % ( querylist, db_Schema, nite )
     
     if args.verbose:
-        print query
+        print(query)
     cur.arraysize = 1000 # get 1000 at a time when fetching
     cur.execute(query)
 
@@ -76,48 +76,48 @@ if __name__ == "__main__":
     propid_list=[]
     lastmjd=-1.
     for item in cur:
-#   	print item
-    	tmp_expdict={}
-    	tmp_expdict["expnum"]=int(item[coldict["e.expnum"]])
-    	tmp_expdict["filename"]=item[coldict["e.filename"]]
-    	tmp_expdict["dateobs"]=item[coldict["e.date_obs"]]
-    	tmp_expdict["obstype"]=item[coldict["e.obstype"]]
-    	if (item[coldict["e.band"]] is None):
-    		tmp_expdict["band"]='NA'
-    	else:
-    		tmp_expdict["band"]=item[coldict["e.band"]]
-    	tmp_expdict["exptime"]=float(item[coldict["e.exptime"]])
-    	tmp_expdict["telra"]=item[coldict["e.telra"]]
-    	tmp_expdict["teldec"]=item[coldict["e.teldec"]]
-    	tmp_expdict["ra"]=float(item[coldict["e.tradeg"]])
-    	tmp_expdict["dec"]=float(item[coldict["e.tdecdeg"]])
-    	if (item[coldict["e.airmass"]] is None):
-    		tmp_expdict["airmass"]="%6s" % ("None")
-    	else:
-    		tmp_expdict["airmass"]="%6.3f" % float(item[coldict["e.airmass"]])
-    	tmp_expdict["propid"]=item[coldict["e.propid"]]
-    	propid_list.append(item[coldict["e.propid"]])
-    	tmp_expdict["object"]=item[coldict["e.object"]]
-    	if (item[coldict["e.program"]]=="survey"):
-    		tmp_expdict["program"]='survey'
-    	elif (item[coldict["e.program"]]=="supernova"):
-    		tmp_expdict["program"]='SN'
-    		has_SN_obs=True
-    	elif (item[coldict["e.program"]]=="photom-std-field"):
-    		tmp_expdict["program"]='phot-std'
-    	else:
-    		if (tmp_expdict["obstype"] in ['zero','dark','dome flat','sky flat']):
-    			tmp_expdict["program"]='cal'
-    		else:
-    			tmp_expdict["program"]='unknown'
+#       print(item)
+        tmp_expdict={}
+        tmp_expdict["expnum"]=int(item[coldict["e.expnum"]])
+        tmp_expdict["filename"]=item[coldict["e.filename"]]
+        tmp_expdict["dateobs"]=item[coldict["e.date_obs"]]
+        tmp_expdict["obstype"]=item[coldict["e.obstype"]]
+        if (item[coldict["e.band"]] is None):
+            tmp_expdict["band"]='NA'
+        else:
+            tmp_expdict["band"]=item[coldict["e.band"]]
+        tmp_expdict["exptime"]=float(item[coldict["e.exptime"]])
+        tmp_expdict["telra"]=item[coldict["e.telra"]]
+        tmp_expdict["teldec"]=item[coldict["e.teldec"]]
+        tmp_expdict["ra"]=float(item[coldict["e.tradeg"]])
+        tmp_expdict["dec"]=float(item[coldict["e.tdecdeg"]])
+        if (item[coldict["e.airmass"]] is None):
+            tmp_expdict["airmass"]="%6s" % ("None")
+        else:
+            tmp_expdict["airmass"]="%6.3f" % float(item[coldict["e.airmass"]])
+        tmp_expdict["propid"]=item[coldict["e.propid"]]
+        propid_list.append(item[coldict["e.propid"]])
+        tmp_expdict["object"]=item[coldict["e.object"]]
+        if (item[coldict["e.program"]]=="survey"):
+            tmp_expdict["program"]='survey'
+        elif (item[coldict["e.program"]]=="supernova"):
+            tmp_expdict["program"]='SN'
+            has_SN_obs=True
+        elif (item[coldict["e.program"]]=="photom-std-field"):
+            tmp_expdict["program"]='phot-std'
+        else:
+            if (tmp_expdict["obstype"] in ['zero','dark','dome flat','sky flat']):
+                tmp_expdict["program"]='cal'
+            else:
+                tmp_expdict["program"]='unknown'
         tmp_expdict["field"]=item[coldict["e.field"]]
-    	tmp_expdict["mjd_obs"]=float(item[coldict["e.mjd_obs"]])
-    	if (lastmjd == -1):
-    		tmp_expdict["elast"]=0.0
-    	else:
-    		tmp_expdict["elast"]=3600.*24.*(tmp_expdict["mjd_obs"]-lastmjd)
+        tmp_expdict["mjd_obs"]=float(item[coldict["e.mjd_obs"]])
+        if (lastmjd == -1):
+            tmp_expdict["elast"]=0.0
+        else:
+            tmp_expdict["elast"]=3600.*24.*(tmp_expdict["mjd_obs"]-lastmjd)
         lastmjd=tmp_expdict["mjd_obs"]
-    	exp_list.append(tmp_expdict)
+        exp_list.append(tmp_expdict)
 
     uniq_propid=list(set(propid_list))
 
@@ -127,28 +127,28 @@ if __name__ == "__main__":
 #
     write_file=False
     if (args.fileout != "-"):
-    	fout = open(args.fileout,"w")
-    	write_file=True
+        fout = open(args.fileout,"w")
+        write_file=True
 #
 #   Check for prop-ids returned by the query
 #
     first=0
     for qprop in uniq_propid:
-    	sum=0
-    	for erec in exp_list:
-    		if (erec["propid"] == qprop):
-    			sum=sum+1
-    	if (first == 0):
-    		if (write_file):
-    			fout.write("#SUM                PROPOSAL(S): {:s} ({:d}) \n".format(qprop,sum))
-    		if (not(args.quiet)):
-    			print("#SUM                PROPOSAL(S): {:s} ({:d}) ".format(qprop,sum))
-    		first=first+1
-    	else:
-    		if (write_file):
-    			fout.write("#SUM                             {:s} ({:d}) ".format(qprop,sum))
-    		if (not(args.quiet)):
-    			print("#SUM                             {:s} ({:d}) ".format(qprop,sum))
+        sum=0
+        for erec in exp_list:
+            if (erec["propid"] == qprop):
+                sum=sum+1
+        if (first == 0):
+            if (write_file):
+                fout.write("#SUM                PROPOSAL(S): {:s} ({:d}) \n".format(qprop,sum))
+            if (not(args.quiet)):
+                print("#SUM                PROPOSAL(S): {:s} ({:d}) ".format(qprop,sum))
+            first=first+1
+        else:
+            if (write_file):
+                fout.write("#SUM                             {:s} ({:d}) ".format(qprop,sum))
+            if (not(args.quiet)):
+                print("#SUM                             {:s} ({:d}) ".format(qprop,sum))
 
     if (write_file):
         fout.write("#SUM \n")
@@ -169,31 +169,31 @@ if __name__ == "__main__":
     othersum=0
     delist="none"
     for erec in exp_list:
-    	if (erec["obstype"] == "zero"):
-    		num_zero=num_zero+1
-    	elif (erec["obstype"] == "dark"):
-    		num_dark=num_dark+1
-    		if (num_dark == 1):
-    			delist='exptime='+'%.1f' % erec["exptime"]
-    		else:
-    			delist=delist+','+'%.1f' % erec["exptime"]
-    	elif (erec["obstype"] == "dome flat"):
-    		nfsum=nfsum+1
-    		if (erec["band"] in band_allow):
-    			num_dflat[band2i[erec["band"]]]=num_dflat[band2i[erec["band"]]]+1
-    	elif (erec["obstype"] == "sky flat"):
-    		ntsum=ntsum+1
-    		if (erec["band"] in band_allow):
-    			num_tflat[band2i[erec["band"]]]=num_tflat[band2i[erec["band"]]]+1
-    	elif ((erec['obstype'] == "object")or(erec['obstype']=="standard")):
-    		obssum=obssum+1
-    		if (erec["band"] in band_allow):
-    			num_obj[band2i[erec["band"]]]=num_obj[band2i[erec["band"]]]+1
-    	else:
-    		othersum=othersum+1
+        if (erec["obstype"] == "zero"):
+            num_zero=num_zero+1
+        elif (erec["obstype"] == "dark"):
+            num_dark=num_dark+1
+            if (num_dark == 1):
+                delist='exptime='+'%.1f' % erec["exptime"]
+            else:
+                delist=delist+','+'%.1f' % erec["exptime"]
+        elif (erec["obstype"] == "dome flat"):
+            nfsum=nfsum+1
+            if (erec["band"] in band_allow):
+                num_dflat[band2i[erec["band"]]]=num_dflat[band2i[erec["band"]]]+1
+        elif (erec["obstype"] == "sky flat"):
+            ntsum=ntsum+1
+            if (erec["band"] in band_allow):
+                num_tflat[band2i[erec["band"]]]=num_tflat[band2i[erec["band"]]]+1
+        elif ((erec['obstype'] == "object")or(erec['obstype']=="standard")):
+            obssum=obssum+1
+            if (erec["band"] in band_allow):
+                num_obj[band2i[erec["band"]]]=num_obj[band2i[erec["band"]]]+1
+        else:
+            othersum=othersum+1
 
-#	dfsum=ufsum+gfsum+rfsum+ifsum+zfsum+yfsum+nfsum
-#	dtsum=utsum+gtsum+rtsum+itsum+ztsum+ytsum+ntsum
+#    dfsum=ufsum+gfsum+rfsum+ifsum+zfsum+yfsum+nfsum
+#    dtsum=utsum+gtsum+rtsum+itsum+ztsum+ytsum+ntsum
 
     dflat_string=[]
     tflat_string=[]
@@ -210,70 +210,70 @@ if __name__ == "__main__":
         nobj_string.append("other=%d"%(obssum-numpy.sum(num_obj)))
 
     if (write_file):
-    	fout.write("#SUM        zero: {:5d} \n".format(num_zero))
-    	fout.write("#SUM        dark: {:5d} ({:s}) \n".format(num_dark,delist))
-    	fout.write("#SUM   dome flat: {:5d} ({:s}) \n".format(nfsum,(",".join(dflat_string))))
-    	fout.write("#SUM    sky flat: {:5d} ({:s}) \n".format(ntsum,(",".join(tflat_string))))
-    	fout.write("#SUM      object: {:5d} ({:s}) \n".format(obssum,(",".join(nobj_string))))
-    	fout.write("#SUM       other: {:5d} \n".format(othersum))
-    	fout.write("#SUM \n") 
+        fout.write("#SUM        zero: {:5d} \n".format(num_zero))
+        fout.write("#SUM        dark: {:5d} ({:s}) \n".format(num_dark,delist))
+        fout.write("#SUM   dome flat: {:5d} ({:s}) \n".format(nfsum,(",".join(dflat_string))))
+        fout.write("#SUM    sky flat: {:5d} ({:s}) \n".format(ntsum,(",".join(tflat_string))))
+        fout.write("#SUM      object: {:5d} ({:s}) \n".format(obssum,(",".join(nobj_string))))
+        fout.write("#SUM       other: {:5d} \n".format(othersum))
+        fout.write("#SUM \n") 
     if (not(args.quiet)):
-    	print("#SUM        zero: {:5d} ".format(num_zero))
-    	print("#SUM        dark: {:5d} ({:s}) ".format(num_dark,delist))
-    	print("#SUM   dome flat: {:5d} ({:s}) ".format(nfsum,(",".join(dflat_string))))
-    	print("#SUM    sky flat: {:5d} ({:s}) ".format(ntsum,(",".join(tflat_string))))
-    	print("#SUM      object: {:5d} ({:s}) ".format(obssum,(",".join(nobj_string))))
-    	print("#SUM       other: {:5d} ".format(othersum))
-    	print("#SUM ") 
+        print("#SUM        zero: {:5d} ".format(num_zero))
+        print("#SUM        dark: {:5d} ({:s}) ".format(num_dark,delist))
+        print("#SUM   dome flat: {:5d} ({:s}) ".format(nfsum,(",".join(dflat_string))))
+        print("#SUM    sky flat: {:5d} ({:s}) ".format(ntsum,(",".join(tflat_string))))
+        print("#SUM      object: {:5d} ({:s}) ".format(obssum,(",".join(nobj_string))))
+        print("#SUM       other: {:5d} ".format(othersum))
+        print("#SUM ") 
 
 #
 #   If SN observations then provide summaries for each field.
 #
     if (has_SN_obs):
-    	for SNfld in ['SN-C1','SN-C2','SN-C3','SN-E1','SN-E2','SN-S1','SN-S2','SN-X1','SN-X2','SN-X3']:
-    		nssum=0
-    		num_snobs=numpy.zeros(7,dtype=numpy.int32)
-    		for erec in exp_list:
-    			if (erec["program"]=='SN'):
-    				if (erec["field"]==SNfld):
-    					nssum=nssum+1
+        for SNfld in ['SN-C1','SN-C2','SN-C3','SN-E1','SN-E2','SN-S1','SN-S2','SN-X1','SN-X2','SN-X3']:
+            nssum=0
+            num_snobs=numpy.zeros(7,dtype=numpy.int32)
+            for erec in exp_list:
+                if (erec["program"]=='SN'):
+                    if (erec["field"]==SNfld):
+                        nssum=nssum+1
 #
-#   					Exptime > 30.0 used to remove pointing exposure (but is kept as "other")
+#                       Exptime > 30.0 used to remove pointing exposure (but is kept as "other")
 #
-    					if ((erec["band"] in band_allow)and(erec["exptime"]>30.0)):
-    						num_snobs[band2i[erec["band"]]]=num_snobs[band2i[erec["band"]]]+1
-    		if (nssum > 0):
-    			if (write_file):
-    				fout.write("#SUM       {:5s}: {:5d} (u={:d},g={:d},r={:d},i={:d},z={:d},Y={:d},other={:d}) \n".format(SNfld,nssum,num_snobs[0],num_snobs[1],num_snobs[2],num_snobs[3],num_snobs[4],num_snobs[5],nssum-numpy.sum(num_snobs)))
-    			if (not(args.quiet)):
-    				print("#SUM       {:5s}: {:5d} (u={:d},g={:d},r={:d},i={:d},z={:d},Y={:d},other={:d}) ".format(SNfld,nssum,num_snobs[0],num_snobs[1],num_snobs[2],num_snobs[3],num_snobs[4],num_snobs[5],nssum-numpy.sum(num_snobs)))
-    	if (write_file):
-    		fout.write("#SUM \n") 
-    	if (not(args.quiet)):
-    		print("#SUM ") 
+                        if ((erec["band"] in band_allow)and(erec["exptime"]>30.0)):
+                            num_snobs[band2i[erec["band"]]]=num_snobs[band2i[erec["band"]]]+1
+            if (nssum > 0):
+                if (write_file):
+                    fout.write("#SUM       {:5s}: {:5d} (u={:d},g={:d},r={:d},i={:d},z={:d},Y={:d},other={:d}) \n".format(SNfld,nssum,num_snobs[0],num_snobs[1],num_snobs[2],num_snobs[3],num_snobs[4],num_snobs[5],nssum-numpy.sum(num_snobs)))
+                if (not(args.quiet)):
+                    print("#SUM       {:5s}: {:5d} (u={:d},g={:d},r={:d},i={:d},z={:d},Y={:d},other={:d}) ".format(SNfld,nssum,num_snobs[0],num_snobs[1],num_snobs[2],num_snobs[3],num_snobs[4],num_snobs[5],nssum-numpy.sum(num_snobs)))
+        if (write_file):
+            fout.write("#SUM \n") 
+        if (not(args.quiet)):
+            print("#SUM ") 
     else:
-    	if (write_file):
-    		fout.write("#SUM No Supernova Observations Identified \n")
-    		fout.write("#SUM \n") 
-    	if (not(args.quiet)):
-    		print("#SUM No Supernova Observations Identified ")
-    		print("#SUM ") 
-	
+        if (write_file):
+            fout.write("#SUM No Supernova Observations Identified \n")
+            fout.write("#SUM \n") 
+        if (not(args.quiet)):
+            print("#SUM No Supernova Observations Identified ")
+            print("#SUM ") 
+    
 #
 #   line by line summary of each exposure's information
 #
     if (not(args.terse)):
-    	if (write_file):
-    		fout.write("#SUM  exposure                                                               exposure  since                       AIR             PROPOSAL \n")
-    		fout.write("#SUM    id      File Name            date_obs              obstype    filter   time    last   TEL_RA    TEL_DEC   MASS  PROGRAM      ID          OBJECT \n")
-    		fout.write("#SUM--------------------------------------------------------------------------------------------------------------------------------------------------- \n")
-    	if (not(args.quiet)):
-    		print("#SUM  exposure                                                               exposure  since                       AIR             PROPOSAL ")
-    		print("#SUM    id      File Name            date_obs              obstype    filter   time    last   TEL_RA    TEL_DEC   MASS  PROGRAM      ID          OBJECT ")
-    		print("#SUM--------------------------------------------------------------------------------------------------------------------------------------------------- ")
+        if (write_file):
+            fout.write("#SUM  exposure                                                               exposure  since                       AIR             PROPOSAL \n")
+            fout.write("#SUM    id      File Name            date_obs              obstype    filter   time    last   TEL_RA    TEL_DEC   MASS  PROGRAM      ID          OBJECT \n")
+            fout.write("#SUM--------------------------------------------------------------------------------------------------------------------------------------------------- \n")
+        if (not(args.quiet)):
+            print("#SUM  exposure                                                               exposure  since                       AIR             PROPOSAL ")
+            print("#SUM    id      File Name            date_obs              obstype    filter   time    last   TEL_RA    TEL_DEC   MASS  PROGRAM      ID          OBJECT ")
+            print("#SUM--------------------------------------------------------------------------------------------------------------------------------------------------- ")
         if (len(exp_list) > 0):
             last_expnum=exp_list[0]["expnum"]-1
-    	for erec in exp_list:
+        for erec in exp_list:
             if (write_file):
                 if (last_expnum != (erec["expnum"]-1)):
                     fout.write("# \n")
@@ -287,7 +287,7 @@ if __name__ == "__main__":
             last_expnum=erec["expnum"]
 
     if (write_file):
-    	fout.close()
+        fout.close()
 
     exit(0)
 
