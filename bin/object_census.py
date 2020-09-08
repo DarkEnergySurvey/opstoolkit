@@ -1,10 +1,9 @@
-#! /usr/bin/env python
-# $Id: verify_tag_objects.py 43197 2016-07-19 19:05:24Z rgruendl $
-# $Rev:: 42694                            $:  # Revision of last commit.
-# $LastChangedBy:: rgruendl               $:  # Author of last commit.
-# $LastCha
-
+#! /usr/bin/env python3
 """
+ object_census.py 43197 2016-07-19 19:05:24Z rgruendl $
+ v1         RAG 2016-07-19
+ python3    RAG 2020-09-08
+
 Some simple tools collected under an umbrella to provide information about
 objects connected with a PROCTAG.
 """
@@ -267,7 +266,7 @@ if __name__ == "__main__":
 
     import argparse
     import os
-    from despydb import DesDbi 
+    import despydb.desdbi
     import stat
     import time
 #    import re
@@ -286,7 +285,7 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose',  action='store', type=int, default=0,     help='Print extra (debug) messages to stdout')
     args = parser.parse_args()
     if (args.verbose):
-        print "Args: ",args
+        print("Args: ",args)
 
     verbose=args.verbose
 #
@@ -312,7 +311,7 @@ if __name__ == "__main__":
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
 #    cur = dbh.cursor()
 
 ################################################################################################
