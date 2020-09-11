@@ -144,7 +144,7 @@ if __name__ == "__main__":
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = despydy.desdbi.DesDbi(desdmfile,args.section,retry=True)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
     cur = dbh.cursor()
 
 ################################################################################################
