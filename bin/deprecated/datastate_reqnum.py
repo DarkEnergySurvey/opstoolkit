@@ -1,16 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Simple set of tasks use to set state and tag runs
 Felipe Menanteau, June 2015
+
+Python 3 migration: RAG, Sept 2020
 """
 
 import os,sys
-from despydb import desdbi
+import despydb.desdbi
 import despyastro
 
 def connect_DB(db_section):
-    dbh = desdbi.DesDbi(section=db_section)
+    dbh = despydb.desdbi.DesDbi(section=db_section,retry=True)
     return dbh
 
 def update_status_null(dbh,reqnum):
@@ -24,12 +26,12 @@ def update_status_null(dbh,reqnum):
     N = len(a)
 
     if N > 0:
-        print "# Found %s runs with NULL status -- will update to STATUS=0" % N
+        print("# Found {:d} runs with NULL status -- will update to STATUS=0".format(N))
         cur.execute(UPDATE_STATUS.format(REQNUM=reqnum))
         dbh.commit()
-        print "# Done"
+        print("# Done")
     else:
-        print "# NO runs found with NULL status"
+        print("# NO runs found with NULL status")
     cur.close()
     return
 
@@ -49,7 +51,7 @@ def set_datastate(dbh,reqnum,new_state):
     for k in range(N):
         U_STATE = "update pfw_attempt set data_state='{new_state}' where unitname='{unitname}' and reqnum={reqnum} and attnum={attnum}"
         update = U_STATE.format(new_state=new_state, unitname=rec['UNITNAME'][k], reqnum=rec['REQNUM'][k], attnum=rec['ATTNUM'][k]) 
-        print "Doing: %s" % update
+        print("Doing: {:s} ".format(update))
         cur.execute(update)
     cur.close()
     dbh.commit()
@@ -68,7 +70,7 @@ def check_tag_exists(dbh,tag):
     # Check if we want to add TAG
     answer = 'yes'
     answer = raw_input('Would you like to add TAG=%s to OPS_PROCTAG_DEF?\n[YES/no]: ' % tag)
-    print answer
+    print(answer)
     if ('no' in answer) or ('No' in answer):
         return
 
@@ -77,7 +79,7 @@ def check_tag_exists(dbh,tag):
     description = raw_input('Please Enter Short TAG Description:\n')
     docurl      = raw_input('Please Enter DOCURL [Optional]:\n')
     I_TAG = "insert into OPS_PROCTAG_DEF (TAG,DESCRIPTION,DOCURL) values ('{tag}','{description}','{docurl}')"
-    print "# Inserting %s into OPS_PROCTAG_DEF" % tag
+    print("# Inserting {:s} into OPS_PROCTAG_DEF".format(tag))
     cur.execute(I_TAG.format(tag=tag,description=description,docurl=docurl))
     cur.close()
     dbh.commit()
@@ -93,7 +95,7 @@ def tag_reqnum(dbh,rec,reqnum,tag):
     N = len(rec)
     for k in range(N):
         insert = I_TAG.format(unitname=rec['UNITNAME'][k], reqnum=rec['REQNUM'][k], attnum=rec['ATTNUM'][k],id=rec['ID'][k],tag=tag)
-        print "Doing: %s" % insert
+        print("Doing: {:s} ".format(insert))
         cur.execute(insert)
     cur.close()
     dbh.commit()
