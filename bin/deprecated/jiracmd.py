@@ -36,7 +36,7 @@ class Jira:
             parent_issue = self.jira.issue(parent)
         except:
             warning= 'Parent issue %s does not exist!' % parent
-            print warning
+            print(warning)
             sys.exit()
 
         subtask_dict = {'project':{'key':parent_issue.fields.project.key},
