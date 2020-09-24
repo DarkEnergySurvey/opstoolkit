@@ -94,17 +94,17 @@ if __name__ == "__main__":
     m = colMunger(data, header)
     for h in header:
         fmt = m.get_optimal_floatformat(h)
-        print "heading, format:", h, fmt
+        print("heading, format:", h, fmt)
         col = zip(*data)[m.index_from_header(h)]
         for c in col :
-            print fmt.format(c),
-        print
+            print(fmt.format(c),)
+        print(" ")
 
     #
     #  Test of type sentiitve changes to a col
     #
     def f(x):
-        print "in f", x
+        print("in f", x)
         return "dog"
 
     header = ["mixedtype"]
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         [1], [-.0001235], [None], ["text"], [{"dict":None}],
         ]
     m=colMunger(data,header)
-    print data
+    print(data)
     m.replace(lambda x : "n/a" if x == None  else x, "mixedtype")
     #m.apply(f, "mixedtype")
-    print m.get_data()
+    print(m.get_data())

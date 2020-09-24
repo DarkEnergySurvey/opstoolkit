@@ -139,7 +139,7 @@ class  prettyPrinter(object):
       data = self._render(data)  # make elements ascii
       fmats = self._fmats(data)    # get array of padding formats)
       for row in data:
-         print fmats.format(*row)
+         print(fmats.format(*row))
 
    def csvprint(self, data):
       """ write a CSV file to stdout"""

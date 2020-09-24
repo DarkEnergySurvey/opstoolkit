@@ -1,9 +1,9 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
-Take an input list of exposures and create a tag in EXPOSURETAG
+Take an input list of exposure/ccdnum and add entries to the EXCLUDE_LIST (or otherwise specified table)
 
 Syntax:
-    blacklist_exposure.py -e expnum -l list [-c] [-D file_root] [-u] [-a analyst] [-s section] [-S Schema][-v]
+    exclude_ccd.py -e expnum -l list [-c] [-D file_root] [-u] [-a analyst] [-s section] [-S Schema][-v]
 
     Must have either -e (expnum) or -l file containing a list of eposures 
     numbers (NOTE both can be used).  The list file has the following format.
@@ -47,7 +47,6 @@ if __name__ == "__main__":
     import os
     import despydb.desdbi
     import stat
-#    import time
     import re
     import sys
 #    import datetime
@@ -55,10 +54,10 @@ if __name__ == "__main__":
 #    from numpy import *
 #    import scipy
     
-    svnid="$Id: blacklist_exposure.py 14596 2013-09-13 19:49:56Z rgruendl $"
-    dbTable='blacklist'
+    svnid="$Id: exclude_ccd.py 14596 2013-09-13 19:49:56Z rgruendl $"
+    dbTable='exclude_list'
 
-    parser = argparse.ArgumentParser(description='Add exposures/ccds to the BLACKLIST')
+    parser = argparse.ArgumentParser(description='Add exposures/ccds to the EXCLUDE_LIST')
     parser.add_argument('-a', '--analyst',  action='store', type=str, default=None,  help='Provides override value for analyst (default uses os.getlogin())')
     parser.add_argument('-D', '--DB_file',  action='store', type=str, default=None,  help='Flag/argument for optional output of DB update file')
     parser.add_argument('-u', '--updateDB', action='store_true', default=False,      help='Flag for program to DIRECTLY update DB (firstcut_eval).')
@@ -74,7 +73,7 @@ if __name__ == "__main__":
     parser.add_argument('-S', '--Schema',  action='store', type=str, default=None,   help='DB schema (do not include \'.\').')
     args = parser.parse_args()
     if (args.verbose):
-        print "Args: ",args
+        print("Args: ",args)
 
     if ((args.expnum is None)and(args.list is None)):
         parser.print_help()
@@ -154,23 +153,20 @@ if __name__ == "__main__":
                     expnum_list.append(tmp_exprec)
             f1.close()
 
-    print "Formed exposure list for update: ",len(expnum_list)," exposures found."
-#    for exp in expnum_list:
-#        print exp["expnum"]
-#    print expnum_list
+    print("Formed exposure list for update: {:d} exposures found.".format(len(expnum_list)))
 
     try:
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = despydb.desdbi.DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
     cur = dbh.cursor()
 
 ################################################################################################
 ################################################################################################
 #   Two queries: 
 #   1) first to find exposure IDs (with a little more info)
-#   2) second is to make certain blacklist entries don't already exist 
+#   2) second is to make certain exclude_list entries don't already exist 
 #
 
     queryitems1 = ["e.filename", "e.object"] 
@@ -193,7 +189,7 @@ if __name__ == "__main__":
 #
         query1 = """select %s from %sexposure e where e.expnum=%d """ % ( querylist1, dbSchema, exprec["expnum"] )
         if args.verbose:
-            print query1
+            print(query1)
         cur.arraysize = 1000 # get 1000 at a time when fetching
         cur.execute(query1)
 
@@ -218,7 +214,7 @@ if __name__ == "__main__":
             
         query2 = """select %s from %s b where b.expnum=%d and b.ccdnum in (%s) """ % ( querylist2, dbTable, tmp_exprec["expnum"], q_ccdlist)
         if args.verbose:
-            print query2
+            print(query2)
         cur.arraysize = 1000 # get 1000 at a time when fetching
         cur.execute(query2)
 
@@ -271,11 +267,11 @@ if __name__ == "__main__":
                 fdbout.write("{:s};\n".format(insert_command))
                 PrintIt=False
             if (PrintIt):
-                print insert_command
+                print(insert_command)
 
-    print "Inserting %d records into %s" % (InsertCnt,dbTable)
+    print("Inserting {:d} records into {:s}".format(InsertCnt,dbTable))
     if(args.updateDB):
         dbh.commit()
-        print "DB update complete and committed"
+        print("DB update complete and committed")
     if (not(args.DB_file is None)):
         fdbout.close()

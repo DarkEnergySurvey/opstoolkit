@@ -14,7 +14,7 @@ def print_timing(func):
         t1 = time.time()
         res = func(*arg)
         t2 = time.time()
-        print >> sys.stdout, '%s took %0.3f ms' % (func.func_name, (t2-t1)*1000.0)
+        print('{:s} took {.3f} ms'.format(func.func_name, (t2-t1)*1000.0),file=sys.stdout)
         return res
     return wrapper
 
@@ -144,9 +144,9 @@ class Q(object):
    def _query(self, query, args):
       """ do query and return cursor print debug info when desired"""
       t0 = time.time()
-      if args.debug : print >>sys.stderr, query
+      if args.debug : print(query,file=sys.stderr)
       self.cur.execute(query)
-      if args.debug : print >>sys.stderr, "took %s seconds" % (time.time()-t0)
+      if args.debug : print("took {:} seconds".format(time.time()-t0),file=sys.stderr)
       if self.cur.description : self._header = zip(*self.cur.description)[0]
       return self.cur
 
@@ -210,26 +210,27 @@ def main(args):
    sql="select SYSDATE d from DUAL"
    q=Q(dbh, sql, args)
    q.delete_cache()
-   print "nest tewo results should be the same if cacheing"
-   print q.query_via_cache().fetchall()
+   print("nest tewo results should be the same if cacheing")
+   print(q.query_via_cache().fetchall())
    time.sleep(2)
    q=Q(dbh, sql, args)
-   print q.query_via_cache().fetchall()
+   print(q.query_via_cache().fetchall())
    q.purge_query(sql)
-   print "nest result should be different"
+   print("nest result should be different")
    time.sleep(2)
    q=Q(dbh, sql, args)
-   print q.query_via_cache().fetchall()
+   print(q.query_via_cache().fetchall())
    time.sleep(2)
-   print "next result should be different"
+   print("next result should be different")
    q.purge_query(sql, olderthan=0.0)
    q.purge_query("dog")  # invalid query 
-   print q.query_via_cache().fetchall()
+   print(q.query_via_cache().fetchall())
 
-   print "dataframe stuff"
+   print("dataframe stuff")
    q=Q(dbh, sql, args)
    df = q.q(returntype=DATAFRAME)
-   print df
+   print(df)
+
 if __name__ == "__main__":
 
    import os
