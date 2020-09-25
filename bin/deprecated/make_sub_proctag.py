@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # $Id: make_sub_proctag.py 43088 2016-07-12 18:03:45Z rgruendl $
 # $Rev:: 42694                            $:  # Revision of last commit.
 # $LastChangedBy:: rgruendl               $:  # Author of last commit.
@@ -58,15 +58,15 @@ def  check_tag_exists(tag,dbh,dbSchema,verbose=0):
 #
         # Check if we want to add TAG
         answer = 'yes'
-        answer = raw_input('Would you like to add TAG=%s to OPS_PROCTAG_DEF?\n[YES/no]: ' % tag)
+        answer = input('Would you like to add TAG={:s} to OPS_PROCTAG_DEF?\n[YES/no]: '.format(tag))
 #        print answer
         if ('YES' in answer.upper()) or ('Y' in answer.upper()):
 
             cur = dbh.cursor()
-            description = raw_input('Please Enter Short TAG Description:\n')
-            docurl      = raw_input('Please Enter DOCURL [Optional]:\n')
+            description = input('Please Enter Short TAG Description:\n')
+            docurl      = input('Please Enter DOCURL [Optional]:\n')
             I_TAG = "insert into OPS_PROCTAG_DEF (TAG,DESCRIPTION,DOCURL) values ('{tag}','{description}','{docurl}')"
-            print "# Inserting %s into OPS_PROCTAG_DEF" % tag
+            print("# Inserting {:s} into OPS_PROCTAG_DEF".format(tag))
             cur.execute(I_TAG.format(tag=tag,description=description,docurl=docurl))
             cur.close()
             dbh.commit()
@@ -107,7 +107,7 @@ def find_exp_attempts(ExpnumList,ProcTag,dbh,dbSchema,verbose=0):
     WHERE t.tag='{ptag:s}'
         and t.pfw_attempt_id=av.pfw_attempt_id
         and av.key='expnum'
-        and to_number(av.val,'999999')=el.expnum
+        and av.val=to_char(el.expnum,'999999')
         and t.pfw_attempt_id=a.id
     """.format(schema=dbSchema,ptag=ProcTag)
 
@@ -312,7 +312,7 @@ if __name__ == "__main__":
 
     import argparse
     import os
-    from despydb import DesDbi 
+    import despydb.desdbi
     import stat
     import time
     import re
@@ -340,7 +340,7 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose',  action='store', type=int, default=0,     help='Print extra (debug) messages to stdout')
     args = parser.parse_args()
     if (args.verbose):
-        print "Args: ",args
+        print("Args: ",args)
 
     verbose=args.verbose
 
@@ -363,22 +363,22 @@ if __name__ == "__main__":
 #
     if (tagtype == "EXP"):
         if ((args.expnum is None)and(args.list is None)):
-            print " "
-            print "ERROR: Must provide one (or both) of the following."
-            print " 1) an expnum or list of expnum (-e), or "
-            print " 2) a file containg a list of exposure numbers (-l)."
-            print "Aborting!"
-            print " "
+            print(" ")
+            print("ERROR: Must provide one (or both) of the following.")
+            print(" 1) an expnum or list of expnum (-e), or ")
+            print(" 2) a file containg a list of exposure numbers (-l).")
+            print("Aborting!")
+            print(" ")
             parser.print_help()
             exit(1)
     elif (tagtype == "TILE"):
         if ((args.tilename is None)and(args.list is None)):
-            print " "
-            print "ERROR: Must provide one (or both) of the following."
-            print " 1) an tilename or list of tilenames (--tilename), or "
-            print " 2) a file containg a list of tilenames (-l)."
-            print "Aborting!"
-            print " "
+            print(" ")
+            print("ERROR: Must provide one (or both) of the following.")
+            print(" 1) an tilename or list of tilenames (--tilename), or ")
+            print(" 2) a file containg a list of tilenames (-l).")
+            print("Aborting!")
+            print(" ")
             parser.print_help()
             exit(1)
 
@@ -441,7 +441,7 @@ if __name__ == "__main__":
                 print("Warning: File {:s} not found!".format(args.list))
                 print("Aborting!")
                 exit(1)
-        print "Formed exposure list for processing: ",len(ExpNumList)," exposures found."
+        print("Formed exposure list for processing: {:d} exposures found.".format(len(ExpNumList)))
     else:
         TileList=[]
         if (not(args.tilename is None)):
@@ -466,7 +466,7 @@ if __name__ == "__main__":
                 print("Warning: File {:s} not found!".format(args.list))
                 print("Aborting!")
                 exit(1)
-        print "Formed tile list for processing: ",len(TileList)," tilenames found."
+        print("Formed tile list for processing: {:d} tilenames found.".format(len(TileList)))
 
 #
 #   Setup DB connection.
@@ -475,7 +475,7 @@ if __name__ == "__main__":
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
 #    cur = dbh.cursor()
 
 ################################################################################################

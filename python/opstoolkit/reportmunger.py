@@ -2,7 +2,7 @@
 class colMunger(object):
     def __init__(self, data, header):
         self._assert_uniform(data)
-        self.cols = zip(*data)
+        self.cols = list(zip(*data))
         self.header= [h.upper() for h in header]
 
     def _assert_uniform(self, data):
@@ -31,7 +31,7 @@ class colMunger(object):
 
     def get_data(self):
         """ return edited 2-d array"""
-        return zip(*self.cols)
+        return list(zip(*self.cols))
 
     def get_header(self):
         """ return canonicalized header"""
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     for h in header:
         fmt = m.get_optimal_floatformat(h)
         print("heading, format:", h, fmt)
-        col = zip(*data)[m.index_from_header(h)]
+        col = list(zip(*data)[m.index_from_header(h)])
         for c in col :
             print(fmt.format(c),)
         print(" ")

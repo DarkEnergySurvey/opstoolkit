@@ -90,7 +90,7 @@ class  prettyPrinter(object):
        but to blank pad an ascii type to produce a veritbal column
        """
 
-      widths = [self._width(col) for col in zip(*rdata)]
+      widths = [self._width(col) for col in list(zip(*rdata))]
       fmats = ' '.join(['{:>%d}' % width for width in widths ])
       return fmats
 

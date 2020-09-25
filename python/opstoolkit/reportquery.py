@@ -147,7 +147,7 @@ class Q(object):
       if args.debug : print(query,file=sys.stderr)
       self.cur.execute(query)
       if args.debug : print("took {:} seconds".format(time.time()-t0),file=sys.stderr)
-      if self.cur.description : self._header = zip(*self.cur.description)[0]
+      if self.cur.description : self._header = list(zip(*self.cur.description))[0]
       return self.cur
 
    def q(self,returntype=CURSOR):
