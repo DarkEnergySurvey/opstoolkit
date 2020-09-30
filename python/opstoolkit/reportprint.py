@@ -59,7 +59,7 @@ class  prettyPrinter(object):
 
       """
       function = "{:}".format
-      if  self.fmatdict.has_key(type(thing)) : 
+      if (type(thing) in self.fmatdict):
          function  = self.fmatdict[type(thing)]
       return function(thing).strip()
 

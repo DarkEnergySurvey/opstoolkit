@@ -251,7 +251,7 @@ def qaplot_job_throughput2(data,PlotFname):
 #
 #   Get ready to plot
 #
-    plt.figure(figsize=(12,8),dpi=300)
+    plt.figure(figsize=(12,8),dpi=90)
 ###########################################################################
 #   Begin first panel (plot stacked histogram showing runs vs. time
 
@@ -305,7 +305,7 @@ def qaplot_job_throughput2(data,PlotFname):
             if (len(xtmp)>0):
                 plt.scatter(xtmp,ytmp,marker=data_legend[dtype]['symbol'],color=data_legend[dtype]['color'])
     else:
-        plt.scatter(data['x2'],data['y2'],marker='.',color='blue')
+        plt.scatter(data['x2'],data['y2'],marker=',',color='blue')
 
 #
 #   Try to choose a sane formatting for the data range in plots.
