@@ -127,7 +127,7 @@ def generate_tag_list_legacy(ProcTag,dbh,dbSchema,verbose=0):
 
 
 ##########################################
-def generate_filespace_list(ProcTag,dbh,dbSchema,verbose=0):
+def generate_filespace_list(ProcTag,dbh,dbSchema,archive_name='desar2home',verbose=0):
     """Function that finds total filespace in archive for each attempt"""
 
     query="""SELECT 
@@ -137,9 +137,9 @@ def generate_filespace_list(ProcTag,dbh,dbSchema,verbose=0):
         WHERE t.tag='{ptag:s}'
             and t.pfw_attempt_id=d.pfw_attempt_id 
             and d.id=fai.desfile_id 
-            and fai.archive_name='desar2home'
+            and fai.archive_name='{aname:s}'
         GROUP by d.pfw_attempt_id
-    """.format(schema=dbSchema,ptag=ProcTag)
+    """.format(schema=dbSchema,ptag=ProcTag,aname=archive_name)
 
     if (verbose > 0):
         print("# Executing query to obtain total archive space usage for each attempt within a PROCTAG")
@@ -286,6 +286,7 @@ if __name__ == "__main__":
     parser.add_argument('--dspace',  action='store_true', default=False,      help='Flag for program to probe disk usage')
     parser.add_argument('--dtype',   action='store_true', default=False,      help='Flag for program to probe disk usage (with breakdown by filetype')
     parser.add_argument('--legacy',  action='store_true', default=False,      help='Flag that tag is part of the legacy schema (e.g. SVA/Y1A1)')
+    parser.add_argument('--archive_name', action='store', type=str, default='desar2home', help='Archive name (default=desar2home)')
     parser.add_argument('-s', '--section',  action='store', type=str, default=None,  help='section of .desservices file with connection info')
     parser.add_argument('-S', '--Schema',   action='store', type=str, default=None,  help='DB schema (do not include \'.\').')
     parser.add_argument('-v', '--verbose',  action='store', type=int, default=0,     help='Print extra (debug) messages to stdout')
@@ -422,7 +423,7 @@ if __name__ == "__main__":
         if (not(args.legacy)):
             # If this were a query for legacy data it was already handled in the previous condition
             t0=time.time()
-            FileSpaceDict=generate_filespace_list(args.proctag,dbh,dbSchema,verbose)
+            FileSpaceDict=generate_filespace_list(args.proctag,dbh,dbSchema,archive_name=args.archive_name,verbose=verbose)
             t1=time.time()
             if (verbose > 0):
                 print("Query to find diskspace associated with each attempt identified {:d} entries.  Execution time was: {:.2f}".format(len(TagDict),(t1-t0)))
