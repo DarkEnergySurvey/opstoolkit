@@ -1,5 +1,9 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
+reportProdResults.py  
+Date: 2020-09-04
+LastChangedBy: rgruendl 
+
 Query a night (or range of nights) to determine the SN sequences present
 and output a list suitable for mass-submits.
 
@@ -126,7 +130,8 @@ def qaplot_job_throughput(data,PlotFname):
     winy1_max=max(data['y1'])
     winy2_max=max(data['y2'])
 
-    print winx1_min,winx1_max,(winx1_max-winx1_min)
+    print(winx1_min,winx1_max,(winx1_max-winx1_min))
+    print("RAG")
 
 #
 #   Get ready to plot
@@ -246,7 +251,7 @@ def qaplot_job_throughput2(data,PlotFname):
 #
 #   Get ready to plot
 #
-    plt.figure(figsize=(12,8),dpi=300)
+    plt.figure(figsize=(12,8),dpi=90)
 ###########################################################################
 #   Begin first panel (plot stacked histogram showing runs vs. time
 
@@ -300,7 +305,7 @@ def qaplot_job_throughput2(data,PlotFname):
             if (len(xtmp)>0):
                 plt.scatter(xtmp,ytmp,marker=data_legend[dtype]['symbol'],color=data_legend[dtype]['color'])
     else:
-        plt.scatter(data['x2'],data['y2'],marker='.',color='blue')
+        plt.scatter(data['x2'],data['y2'],marker=',',color='blue')
 
 #
 #   Try to choose a sane formatting for the data range in plots.
@@ -541,7 +546,7 @@ if __name__ == "__main__":
 
     import argparse
     import os
-    from despydb import DesDbi 
+    import despydb.desdbi
 #    from opstoolkit import jiracmd
     from opstoolkit import nite_strings
     import re
@@ -578,13 +583,13 @@ if __name__ == "__main__":
     parser.add_argument('-S', '--Schema',  action='store', type=str, default=None, help='DB schema (do not include \'.\').')
     args = parser.parse_args()
     if (args.verbose):
-        print "Args: ",args
+        print("Args: ",args)
 
     if ((args.days_back is None)and(args.first is None)):
-        print "Must specify --days_back or --first for query"
+        print("Must specify --days_back or --first for query")
         exit(1)
 #    if (args.jira is None):
-#        print "Must specify --jira {parent} for query"
+#        print("Must specify --jira {parent} for query")
 #        exit(1)
     if (args.QAplot is None):
         QAplotFlag=False
@@ -619,8 +624,8 @@ if __name__ == "__main__":
     if (args.time_bin is None):
         TimeBin=1.0/24.0
     else:
-        print args.time_bin[-1:]
-        print args.time_bin[:-1]
+        print("Parsing time bin: ",args.time_bin[-1:])
+        print("Parsing time bin: ",args.time_bin[:-1])
         if (args.time_bin[-1:] == "h"):
             TimeBin=float(args.time_bin[:-1])/24.0
         elif (args.time_bin[-1:] == "d"):
@@ -653,7 +658,7 @@ if __name__ == "__main__":
     else:
         submit_constraint="and a.SUBMITTIME > SYSDATE-%s " % (args.days_back)
 
-#    print first_submit,last_submit
+#    print(first_submit,last_submit)
 
 #
 #   Setup DB connection
@@ -662,7 +667,7 @@ if __name__ == "__main__":
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile, args.section, retry=True)
     cur = dbh.cursor()
 
 #
@@ -693,7 +698,7 @@ if __name__ == "__main__":
             sopipe=only_pipe)
 
     if args.verbose:
-        print query
+        print(query)
     cur.arraysize = 1000 # get 1000 at a time when fetching
     cur.execute(query)
 
@@ -735,7 +740,7 @@ if __name__ == "__main__":
             and j.task_id=t.id""".format(qlist=querylist,schema=db_Schema)
 
     if args.verbose:
-        print query
+        print(query)
     cur.arraysize = 1000 # get 1000 at a time when fetching
     cur.execute(query)
 
@@ -849,8 +854,8 @@ if __name__ == "__main__":
     print("{:12s} {:10s} {:15s} {:6s} {:2s} {:8s} {:12s} {:15s} {:15s} {:7s} {:7s} {:8s} {:6s} {:s} ".format("#"," "," "," "," "," "," "," "," ","  Proc","Elapsed"," "," "," "))
     print("{:12s} {:10s} {:15s} {:6s} {:2s} {:8s} {:12s} {:15s} {:15s} {:7s} {:7s} {:8s} {:6s} {:s} ".format("# attempt_id","exec_host","fld-band-seq","reqnum","a#","Campaign","Pipeline","  Submit Time","    End Time","  [s]","  [d]","  State","Status","  Filepath"))
     for attempt in attempt_list:
-#        print attempt_dict[attempt]
-#        print attempt_dict[attempt]['exec_host']
+#        print(attempt_dict[attempt])
+#        print(attempt_dict[attempt]['exec_host'])
         print("{att_id:12d} {e_host:10s} {a_unit:15s} {a_reqn:6d} {a_attn:2d} {campgn:8s} {pipeln:12s} {s_time:15s} {e_time:15s} {p_time:7.2f} {t_days:7.3f} {dstate:8s} {status:6d} {a_path:s} ".format(
             att_id=attempt,
             e_host=attempt_dict[attempt]["exec_host"][:10],
@@ -866,7 +871,7 @@ if __name__ == "__main__":
             dstate=attempt_dict[attempt]["a.data_state"][:7],
             status=attempt_dict[attempt]["status"],
             a_path=attempt_dict[attempt]["a.archive_path"]))
-#        print attempt_dict[attempt]["a.subpipeprod"],attempt_dict[attempt]["a.subpipever"]
+#        print(attempt_dict[attempt]["a.subpipeprod"],attempt_dict[attempt]["a.subpipever"])
     if (len(attempt_list)<1):
         print("# No results")
     print("# End summary ")
@@ -896,7 +901,7 @@ if __name__ == "__main__":
 #        pdata={'x1':cstart,'y1':clist,'y2':ctime,'color':cval}
 #        pfname='%s_job_throughput.png' % ( args.QAplot )
 #        yeahIworked=qaplot_job_throughput(pdata,pfname)
-#        print yeahIworked
+#        print(yeahIworked)
 
 #
 #   Binned/histogram summarys
@@ -931,8 +936,8 @@ if __name__ == "__main__":
         TNcstart_range=TNcstart_max-TNcstart_min
 
         TimeBins=numpy.arange(TNcstart_min,TNcstart_max+TimeBin,TimeBin)
-#        print TNcstart_min,TNcstart_max
-#        print TimeBins
+#        print(TNcstart_min,TNcstart_max)
+#        print(TimeBins)
         TimeBinCent=numpy.zeros(numpy.shape(TimeBins),dtype=float)
         for ibin, t1 in enumerate(TimeBins):
             if (ibin < len(TimeBins)-1):
@@ -983,7 +988,7 @@ if __name__ == "__main__":
 #               Work out the range over which an attempt was running and insert into the running structure
 #
                 run_range=numpy.where(numpy.logical_and((TimeBins < TN_att_stop+TimeBin),(TimeBins > TN_att_start-TimeBin)))
-#                print run_range
+#                print(run_range)
                 for CentTime in TimeBinCent[run_range]:
                     if (CurPipe == "sne"):
                         PipeSummary[CurPipe]['running_list'].append(CentTime)
@@ -1008,7 +1013,7 @@ if __name__ == "__main__":
         pdata={'x1':TimeBins,'y1':PipeSummary,'x2':TNcstart,'y2':ctime,'color':cval,'x3':Ptime_tval,'y3':Ptime_mval,'c3':Ptime_cval}
         pfname='%s_job_throughput2.png' % ( args.QAplot )
         yeahIworked=qaplot_job_throughput2(pdata,pfname)
-#        print yeahIworked
+#        print(yeahIworked)
 
 
 
@@ -1031,14 +1036,14 @@ if __name__ == "__main__":
         query = """select %s from %sseminfo s, %stask t, %spfw_attempt a where a.id=%s and a.task_id=t.root_task_id and t.id=s.task_id order by s.request_time""" % ( querylist, db_Schema, db_Schema, db_Schema, dbh.get_named_bind_string('pfw_attempt_id')) 
         cur.prepare(query)
         if (args.verbose):
-            print query
+            print(query)
 
     NumAttemptProcessed=0
     for attempt in attempt_list:
         NumAttemptProcessed=NumAttemptProcessed+1
         if (not(args.verbose)):
             if ( ( NumAttemptProcessed % 100 )==0 ):
-                print "Working on Attempt %d of %d " % (NumAttemptProcessed,len(attempt_list))
+                print("Working on Attempt %d of %d " % (NumAttemptProcessed,len(attempt_list)))
 
         if (use_Prepared):
 #            query_parms={'reqnum':attempt_dict[attempt]['a.reqnum'],'unitname':attempt_dict[attempt]['a.unitname'],'attnum':attempt_dict[attempt]['a.attnum']}
@@ -1057,7 +1062,7 @@ if __name__ == "__main__":
             
             if args.verbose:
                 if (attempt == attempt_list[0]):
-                    print query
+                    print(query)
             cur.execute(query)
         
 #        query = """select %s from %sseminfo s, %stask t, %spfw_attempt a where a.reqnum=%s and a.unitname=%s and a.attnum=%s and a.task_id=t.root_task_id and t.id=s.task_id order by s.request_time""" % ( querylist, db_Schema, db_Schema, db_Schema, dbh.get_named_bind_string('reqnum'), dbh.get_named_bind_string('unitname'), dbh.get_named_bind_string('attnum')) 
@@ -1074,7 +1079,7 @@ if __name__ == "__main__":
         if args.verbose:
             if (attempt == attempt_list[0]):
                 for trans in trans_list:
-                    print trans
+                    print(trans)
 
         trans_info={'in':{'wait':[],'xfer':[],'pend':[]},'out':{'wait':[],'xfer':[],'pend':[]},'other':{'wait':[],'xfer':[],'pend':[]}}
         for trans in trans_list:
@@ -1088,7 +1093,7 @@ if __name__ == "__main__":
                 trans_queue='out'
             else:
                 trans_queue='other'
-            if (trans_queue=='other'): print trans['s.name']
+            if (trans_queue=='other'): print(trans['s.name'])
             if (trans['s.release_time'] is None):
                 trans_info[trans_queue]['pend'].append(1)
             else:
@@ -1109,7 +1114,7 @@ if __name__ == "__main__":
         for queue in ['in','out','other']:
             num_val=[len(trans_info[queue]['wait']),len(trans_info[queue]['xfer']),len(trans_info[queue]['pend'])]
             if (args.verbose):
-                print queue,num_val
+                print(queue,num_val)
             if ((num_val[0]>0)and(num_val[1]>0)):
                 a_wait=numpy.array(trans_info[queue]['wait'])
                 a_xfer=numpy.array(trans_info[queue]['xfer'])
@@ -1155,12 +1160,12 @@ if __name__ == "__main__":
         txfer_in=[]
         txfer_out=[]
         cval=[]
-#        print len(attempt_list)
+#        print(len(attempt_list))
         for attempt in attempt_list:
             if (attempt_dict[attempt]['status']>=0):
-#                print "1  ",attempt,attempt_dict[attempt]['tdays'],attempt_dict[attempt]['proctime']
+#                print("1  ",attempt,attempt_dict[attempt]['tdays'],attempt_dict[attempt]['proctime'])
                 if ((attempt_dict[attempt]['tdays']>0)and(attempt_dict[attempt]['proctime']>0)):
-#                    print "2    ",attempt,attempt_dict[attempt]['transfer']['in'],attempt_dict[attempt]['transfer']['out']
+#                    print("2    ",attempt,attempt_dict[attempt]['transfer']['in'],attempt_dict[attempt]['transfer']['out'])
                     if (('num' in attempt_dict[attempt]['transfer']['in'])and('num' in attempt_dict[attempt]['transfer']['out'])):
                         cstart.append(attempt_dict[attempt]['tdays'])
                         twait_in.append(attempt_dict[attempt]['transfer']['in']['total_wait'])
@@ -1172,7 +1177,7 @@ if __name__ == "__main__":
         pdata={'x1':cstart,'y1':twait_in,'y2':twait_out,'y3':txfer_in,'y4':txfer_out,'color':cval}
         pfname='%s_transfer.png' % ( args.QAplot )
         yeahIworked=qaplot_transfer1(pdata,pfname)
-        print yeahIworked
+        print(yeahIworked)
 
 #
 #   Transfer
@@ -1204,7 +1209,7 @@ if __name__ == "__main__":
             query = """select %s from %spfw_block b where b.reqnum=%d and b.unitname='%s' and b.attnum=%d order by b.blknum """ % ( querylist, db_Schema, attempt['reqnum'],attempt['unitname'],attempt['attnum'])
 
             if args.verbose:
-                print query
+                print(query)
             cur.arraysize = 1000 # get 1000 at a time when fetching
             cur.execute(query)
 
@@ -1231,14 +1236,14 @@ if __name__ == "__main__":
             query = """select %s from %spfw_wrapper w, %spfw_exec e, %spfw_job j where w.reqnum=%d and w.unitname='%s' and w.attnum=%d and w.reqnum=e.reqnum and w.unitname=e.unitname and w.attnum=e.attnum and e.wrapnum=w.wrapnum and w.reqnum=j.reqnum and w.unitname=j.unitname and w.attnum=j.attnum and w.jobnum=j.jobnum """ % ( querylist, db_Schema, db_Schema, db_Schema, attempt['reqnum'],attempt['unitname'],attempt['attnum'])
 
             if args.verbose:
-                print query
+                print(query)
             cur.arraysize = 1000 # get 1000 at a time when fetching
             cur.execute(query)
 
             for item in cur:
                 mname=item[coldict["w.modname"]].lower()
                 if (mname not in proc_dict[proc_attempt]):
-                    print "# Warning: Missing module ",mname," (added)"
+                    print("# Warning: Missing module ",mname," (added)")
                     proc_dict[proc_attempt][mname]={}
                     proc_dict[proc_attempt][mname]['fail']=0
                     proc_dict[proc_attempt][mname]['pass']=0
@@ -1255,7 +1260,7 @@ if __name__ == "__main__":
                 else:
                     proc_dict[proc_attempt][mname]['proc']=proc_dict[proc_attempt][mname]['proc']+1
                     proc_dict[proc_attempt][mname]['proc_jk'].append(item[coldict["j.jobkeys"]])
-#                    print item[coldict["j.jobkeys"]]
+#                    print(item[coldict["j.jobkeys"]])
             mod_list=[]
             mod_unfinished=0
             for mod in proc_dict[proc_attempt]['modlist']:

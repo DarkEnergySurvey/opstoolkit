@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Report processing attempts for a procecssing request, 
 based on data in the  operational database.
@@ -47,7 +47,7 @@ def mkReport(args):
    If a program wanted this report, this is 
    the subroutine to call, 
    """
-   dbh = DesDbi(os.path.join(os.getenv("HOME"),".desservices.ini"),args.section)
+   dbh = despydb.desdbi.DesDbi(os.path.join(os.getenv("HOME"),".desservices.ini"),args.section)
 
    sql="""
      select 
@@ -105,8 +105,7 @@ if __name__ == "__main__":
    import sys
    import time
    import argparse 
-   from despydb import DesDbi 
-   #import cx_Oracle #needed to catch execptions
+   import despydb.desdbi 
 
    """Create command line arguments"""
    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)

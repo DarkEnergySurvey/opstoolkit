@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 """ This code takes an unitname,reqnum,attnum combination and applies a tag to it in the ops_proctag table. This combination is known as a "run." The code can also take a comma-separated list of "runs" per line and adds the "run" to the ops_proctag table, then updates the tag for each "run" specified. Allowable tags are defined in the ops_proctag_def table.
 
@@ -8,16 +8,16 @@ D00155739,70,01,Y1A1_FINALCUT
 D00155742,70,02,Y1A1_FINALCUT
 D00205550,71,01,Y1A1_PRECAL
 
-
 Created by : Michael D. Johnson, August, 6th 2014
 Version 1
+Python3 update: RAG, Sept, 4th 2020
 """
 
 """ Importing necessary modules"""
 import argparse
 import os
 import sys
-from despydb import DesDbi 
+import despydb.desdbi
 
 """Create command line arguments"""
 parser = argparse.ArgumentParser(description=__doc__)
@@ -41,7 +41,7 @@ if file is None:
     attnum = args.attnum
     tag = args.tag
     if unitname is None or reqnum is None or attnum is None or tag is None:
-        print "Must specify all: unitname,reqnum,attnum,tag!"
+        print("Must specify all: unitname,reqnum,attnum,tag!")
         sys.exit(1)
     run.append([unitname,reqnum,attnum,tag])
 
@@ -57,7 +57,7 @@ if file is not None:
             unitname,reqnum,attnum = l[0],l[1],l[2]
             if args.tag is None:
                 if len(l) < 4:
-                    print "Must specify all: unitname,reqnum,attnum,tag!"
+                    print("Must specify all: unitname,reqnum,attnum,tag!")
                     sys.exit(1)
                 tag = l[3]
                 run.append([unitname,reqnum,attnum,tag])
@@ -71,7 +71,7 @@ try:
 except KeyError:
     desdmfile = None
 
-dbh = DesDbi(desdmfile,section)
+dbh = despydb.desdbi.DesDbi(desdmfile,section,retry=True)
 cur = dbh.cursor()
 
 """ Add pfw_attempt_id to list """
@@ -88,10 +88,10 @@ for list in run:
     query = "insert into PROCTAG (TAG,PFW_ATTEMPT_ID) values ('{tag}',{pfw_attempt_id})".format(
             tag=attemptdict['tag'],pfw_attempt_id=attemptdict['pfw_attempt_id']) 
     if args.update:
-        print 'Executing...%s,%s,%s,%s' % (list[0],list[1],list[2],list[3])
+        print('Executing...{:s},{:s},{:s},{:s}'.format(list[0],list[1],list[2],list[3]))
         cur.execute(query)
     else:
-        print 'Will insert tag = %s for unitname: %s,reqnum: %s,attnum: %s into DB' % (list[3],list[0],list[1],list[2])
+        print('Will insert tag = {:s} for unitname: {:s},reqnum: {:s},attnum: {:s} into DB'.format(list[3],list[0],list[1],list[2]))
 
 if args.update:
     dbh.commit()

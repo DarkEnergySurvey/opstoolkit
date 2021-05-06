@@ -1,5 +1,9 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
+declare_EXPNUM_bad.py
+v1                RAG 2016-09-19
+python3 migration RAG 2020-09-08
+
 Create/write database entries for unprocessable exposures so that they
 can be declared bad despite not receiving full first cut processing.
 
@@ -24,7 +28,7 @@ if __name__ == "__main__":
 
     import argparse
     import os
-    from despydb import DesDbi 
+    import despydb.desdbi
     import stat
     import time
     import re
@@ -55,15 +59,15 @@ if __name__ == "__main__":
     parser.add_argument('-S', '--Schema',   action='store', type=str, default=None, help='DB schema (do not include \'.\').')
     args = parser.parse_args()
     if (args.verbose):
-        print "Args: ",args
+        print("Args: ",args)
 
     if ((args.expnum is None)and(args.list is None)):
-        print " "
-        print "ERROR: Must provide one (or both) of the following."
-        print " 1) an expnum or list of expnum (-e), or "
-        print " 2) a file containg a list of exposure numbers (-l)."
-        print "Aborting!"
-        print " "
+        print(" ")
+        print("ERROR: Must provide one (or both) of the following.")
+        print(" 1) an expnum or list of expnum (-e), or ")
+        print(" 2) a file containg a list of exposure numbers (-l).")
+        print("Aborting!")
+        print(" ")
         parser.print_help()
         exit(1)
 
@@ -133,14 +137,14 @@ if __name__ == "__main__":
                     expnum_list.append(tmp_exprec)
             f1.close()
 
-    print "Formed exposure list for processing: ",len(expnum_list)," exposures found."
-#    print expnum_list
+    print("Formed exposure list for processing: {:d} exposures found.".format(len(expnum_list)))
+#    print(expnum_list)
 
     try:
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
     cur = dbh.cursor()
 
 ################################################################################################
@@ -162,7 +166,7 @@ if __name__ == "__main__":
         query = """select %s from %sexposure e where e.expnum=%d and e.camsym='%s' """ % ( querylist, db_Schema, exprec["expnum"], args.camsym  )
     
         if args.verbose:
-            print query
+            print(query)
         cur.arraysize = 1000 # get 1000 at a time when fetching
         cur.execute(query)
 
@@ -276,8 +280,8 @@ if __name__ == "__main__":
             num_insert=num_insert+1
             if (args.verbose):
                 if (num_insert == 1):
-                    print db_cname
-                print db_value
+                    print(db_cname)
+                print(db_value)
 
 
             if(args.updateDB):
@@ -289,7 +293,7 @@ if __name__ == "__main__":
 
     if(args.updateDB):
         dbh.commit()
-        print "DB update complete and committed"
+        print("DB update complete and committed")
     if (use_DB_file):
         fdbout.close()
     exit(0)

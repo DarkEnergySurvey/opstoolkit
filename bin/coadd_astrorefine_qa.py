@@ -1,10 +1,10 @@
-#! /usr/bin/env python
-# $Id: coadd_astrorefine_qa.py 44367 2016-10-11 14:11:26Z rgruendl $
-# $Rev: 44367 $:  # Revision of last commit.
-# $LastChangedBy: rgruendl $:  # Author of last commit.
+#! /usr/bin/env python3
 
 """
-Simple query to get exposure-based astrometry QA from a COADD attempt.
+Simple application to get exposure-based astrometry QA from a COADD attempt.
+
+Imported from SVN (last change was rev 44367, October 11, 2016 by rgruendl)
+Python3 update: RAG, Sept, 24th 2020
 """
 
 ########################
@@ -222,7 +222,7 @@ def find_clusters(Data,dfloor=3.,ncluster=2,verbose=0):
     d2hist,d2xbins,d2ybins=numpy.histogram2d(xdata,ydata,nbins)
 
     if (verbose>2):
-        print d2hist
+        print(d2hist)
 
     cluster=[]
     FindMoreClusters=True
@@ -367,7 +367,7 @@ def FindClusters(HData,MaxFind,Floor,BlankSize=0,verbose=0):
     """
 
     if (verbose>2):
-        print HData['hist']
+        print(HData['hist'])
     clusters=[]
     FindMoreClusters=True
     icluster=0
@@ -525,7 +525,7 @@ def find_clusters2(Data,dfloor=3.,ncluster=4,verbose=0):
         add_cluster=[]
         for i, group in enumerate(new_cluster):
             lost_member=cluster0[i]['n0']-new_cluster[i]['n0'] 
-            print i,cluster0[i]['n0'],new_cluster[i]['n0'],lost_member
+            print(i,cluster0[i]['n0'],new_cluster[i]['n0'],lost_member)
             if (lost_member > 2*dfloor):
                 print("# Analysis of Peak {:d} has initiated a search for a subpeak?".format(group['cnt']))
 #
@@ -807,7 +807,7 @@ if __name__ == "__main__":
 #    from datetime import datetime
     import math
     import numpy
-    from despydb import DesDbi 
+    import despydb.desdbi 
     import opstoolkit.reportquery  as rq
     import opstoolkit.reportmunger as rm
     import opstoolkit.reportprint  as rp
@@ -835,7 +835,7 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose',  action='store', type=int, default=0,     help='Print extra (debug) messages to stdout')
     args = parser.parse_args()
     if (args.verbose):
-        print "Args: ",args
+        print("Args: ",args)
     verbose=args.verbose
 #
 #   Check for minimal input (attempt or TileName+Reqnum)
@@ -863,7 +863,7 @@ if __name__ == "__main__":
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
 #    cur = dbh.cursor()
 
     if (find_attempt):

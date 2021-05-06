@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
 Query a night (or range of nights) to determine the SN sequences present
 and output a list suitable for mass-submits.
@@ -10,8 +10,8 @@ if __name__ == "__main__":
 
     import argparse
     import os
-    from despydb import DesDbi 
-    from opstoolkit import jiracmd
+    import despydb.desdbi
+#    from opstoolkit import jiracmd
     from opstoolkit import nite_strings
     import stat
     import time
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('--last',    action='store', type=str, default=None, help='Last night (nite) to consider')
     parser.add_argument('--night',   action='store', type=str, default=None, help='Night (nite) to consider')
     parser.add_argument('--fileout', action='store', type=str, default=None, help='Summary listing filename (default is STDOUT)')
-    parser.add_argument('--jira',    action='store', type=str, default=None, help='Confine query to a ticket or sub-tickets under a JIRA ticket')
+#    parser.add_argument('--jira',    action='store', type=str, default=None, help='Confine query to a ticket or sub-tickets under a JIRA ticket')
     parser.add_argument('--only_parent', action='store_true', default=False, help='Flag to only search under the indicated ticket')
     parser.add_argument('--only_failed', action='store_true', default=False, help='Flag to only report on submissions that have resulted in failure')
     parser.add_argument('--only_running', action='store_true', default=False, help='Flag to only report on submissions that are currently running')
@@ -39,14 +39,14 @@ if __name__ == "__main__":
     parser.add_argument('-S', '--Schema',  action='store', type=str, default=None, help='DB schema (do not include \'.\').')
     args = parser.parse_args()
     if (args.verbose):
-        print "Args: ",args
+        print("Args: ",args)
 
     if ((args.night is None)and(args.first is None)):
-        print "Must specify --night or --first for query"
+        print("Must specify --night or --first for query")
         exit(1)
-    if (args.jira is None):
-        print "Must specify --jira {parent} for query"
-        exit(1)
+#    if (args.jira is None):
+#        print("Must specify --jira {parent} for query")
+#        exit(1)
 
     if (args.night is not None):
         f_night=args.night
@@ -86,15 +86,18 @@ if __name__ == "__main__":
         only_failed=""
 
 #
-#   If an association with a JIRA ticket has been requested then make sure that a connection can be made to jira also.
-#   NOTE: Could use try for inital connect if suitable means to catch an error was known....
+#   RAG removed JIRA connections when migrating to Python3
 #
-    jira_connect = jiracmd.Jira('jira-desdm')
-    try:
-        check_parent_issue = jira_connect.jira.issue(args.jira)
-    except:
-        print 'Parent issue %s does not exist!' % args.jira
-        sys.exit()
+##
+##   If an association with a JIRA ticket has been requested then make sure that a connection can be made to jira also.
+##   NOTE: Could use try for inital connect if suitable means to catch an error was known....
+##
+#    jira_connect = jiracmd.Jira('jira-desdm')
+#    try:
+#        check_parent_issue = jira_connect.jira.issue(args.jira)
+#    except:
+#        print('Parent issue {:s} does not exist!'.format(args.jira))
+#        sys.exit()
 
     reqnum_dict={}
     if (args.only_parent):
@@ -124,7 +127,7 @@ if __name__ == "__main__":
             subissue_exists = jira_connect.search_for_issue(args.jira,nite)
             if (subissue_exists[1] != 0):
                 if (args.verbose):
-                    print "#JIRA ticket exists for %s. Will use %s." % (nite,subissue_exists[0][0].key)
+                    print("#JIRA ticket exists for {:s}. Will use {:s}.".format(nite,subissue_exists[0][0].key))
                 reqnum_dict[nite]=str(subissue_exists[0][0].key).split('-')[1]
 
 #
@@ -134,7 +137,7 @@ if __name__ == "__main__":
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
     cur = dbh.cursor()
 
 #
@@ -156,7 +159,7 @@ if __name__ == "__main__":
     query = """select %s from %spfw_attempt a, %stask t where %s %s %s %s and a.task_id=t.id order by a.submittime """ % ( querylist, db_Schema, db_Schema, req_list_constraint,suppress_junk,only_running,only_failed)
 
     if args.verbose:
-        print query
+        print(query)
     cur.arraysize = 1000 # get 1000 at a time when fetching
     cur.execute(query)
 
@@ -243,7 +246,7 @@ if __name__ == "__main__":
             query = """select %s from %spfw_block b where b.reqnum=%d and b.unitname='%s' and b.attnum=%d order by b.blknum """ % ( querylist, db_Schema, attempt['reqnum'],attempt['unitname'],attempt['attnum'])
 
             if args.verbose:
-                print query
+                print(query)
             cur.arraysize = 1000 # get 1000 at a time when fetching
             cur.execute(query)
 
@@ -270,14 +273,14 @@ if __name__ == "__main__":
             query = """select %s from %spfw_wrapper w, %spfw_exec e, %spfw_job j where w.reqnum=%d and w.unitname='%s' and w.attnum=%d and w.reqnum=e.reqnum and w.unitname=e.unitname and w.attnum=e.attnum and e.wrapnum=w.wrapnum and w.reqnum=j.reqnum and w.unitname=j.unitname and w.attnum=j.attnum and w.jobnum=j.jobnum """ % ( querylist, db_Schema, db_Schema, db_Schema, attempt['reqnum'],attempt['unitname'],attempt['attnum'])
 
             if args.verbose:
-                print query
+                print(query)
             cur.arraysize = 1000 # get 1000 at a time when fetching
             cur.execute(query)
 
             for item in cur:
                 mname=item[coldict["w.modname"]].lower()
                 if (mname not in proc_dict[proc_attempt]):
-                    print "# Warning: Missing module ",mname," (added)"
+                    print("# Warning: Missing module {:s} (added)".format(mname))
                     proc_dict[proc_attempt][mname]={}
                     proc_dict[proc_attempt][mname]['fail']=0
                     proc_dict[proc_attempt][mname]['pass']=0
@@ -294,7 +297,7 @@ if __name__ == "__main__":
                 else:
                     proc_dict[proc_attempt][mname]['proc']=proc_dict[proc_attempt][mname]['proc']+1
                     proc_dict[proc_attempt][mname]['proc_jk'].append(item[coldict["j.jobkeys"]])
-#                    print item[coldict["j.jobkeys"]]
+#                    print(item[coldict["j.jobkeys"]])
             mod_list=[]
             mod_unfinished=0
             for mod in proc_dict[proc_attempt]['modlist']:

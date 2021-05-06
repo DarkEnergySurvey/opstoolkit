@@ -1,19 +1,19 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 """
 Created by Michael D. Johnson
 File takes an sql query on the command line and either prints the results to screen or it prints it to a line-separated file"""
 
 """ Importing necessary python modulesi"""
-from cx_Oracle import *
+#from cx_Oracle import *
 import os
 import re
 import argparse
-from despydb import DesDbi
+import despydb.desdbi
 
 """ Creating command line arguments"""
 parser=argparse.ArgumentParser()
-parser.add_argument('--query','-q', help='Wrap SQL query in "". No need to end in ;')
+parser.add_argument('--query','-q', required=True, help='Wrap SQL query in "". No need to end in ;')
 parser.add_argument('--filename','-f',help='Name of output file to which query is written. File saved by default to cwd.')
 parser.add_argument('-p', action='store_true',default=False,dest='p',help="When specified query results won't print to file but will print to screen")
 parser.add_argument('--section','-s',help='DB in desservices.py file')
@@ -22,13 +22,18 @@ query=args.query
 filename=args.filename
 section= args.section
 
+if (not(args.p))and(args.filename is None):
+    print("Must specify either -p (output to screen) or -f [filename].")
+    print("Aborting!")
+    exit(0)
+
 """ Searching for .desdm file in users home directory, parse the file, and connect to the appropriate database"""
 try:
     desdmfile =  os.environ["des_services"]
 except KeyError:
     desdmfile  = None
 
-dbh = DesDbi(desdmfile,section)
+dbh = despydb.desdbi.DesDbi(desdmfile,section,retry=True)
 cur = dbh.cursor()
 
 """ Querying the database and extract data from query"""
@@ -59,7 +64,7 @@ else:
     for j in listy:
         j=str(j).strip("[]")
         j=re.sub("'",'',j)
-        print j
+        print(j)
 
 """ Closing the connection to the database"""
 cur.close()

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 """
 Change the data management state for processing attempts in the pfw_attempt table. Can update one attempt at a time given commandline options or specify a file of line-separated attempts. Example of file below:
@@ -10,8 +10,8 @@ D00155742,70,02,ACTIVE
 D00205550,71,01,ACTIVE
 
 
-
 Created by Michael D. Johnson. August, 6th 2014
+Python3 Migration by RAG, September 9th, 2020
 
 For usage information: ./datastate.py -h
 
@@ -23,7 +23,8 @@ import sys
 
 import argparse
 
-from despydb import DesDbi
+#from despydb import DesDbi
+import despydb.desdbi 
 
 """Create command line arguments"""
 parser = argparse.ArgumentParser(description=__doc__)
@@ -49,7 +50,7 @@ if file is None:
     attnum = args.attnum
     newstate = args.newstate
     if unitname is None or reqnum is None or attnum is None or newstate is None:
-        print "Must specify all: unitname,reqnum,attnum,newstate!"
+        print("Must specify all: unitname,reqnum,attnum,newstate!")
         sys.exit(1)
     run.append([unitname,reqnum,attnum,newstate])
 
@@ -64,7 +65,7 @@ if file is not None:
         if '#' not in l:
             l = l.split(',')
             if len(l) < 4:
-                print "Must specify all: unitname,reqnum,attnum,newstate!"
+                print("Must specify all: unitname,reqnum,attnum,newstate!")
                 sys.exit(1)
             unitname = l[0]
             reqnum = l[1]
@@ -81,7 +82,7 @@ try:
 except KeyError:
     desdmfile = None
 
-dbh = DesDbi(desdmfile,section)
+dbh = despydb.desdbi.DesDbi(desdmfile,section,retry=True)
 cur = dbh.cursor()
 
 if args.dbupdate is False:
@@ -90,10 +91,10 @@ if args.dbupdate is False:
         cur.execute(quickcheck)
         originalq = cur.fetchall()
         if len(originalq) == 0:
-            print '%s (r%s,%s,p%s) %s' % ('Attempt',r[0],r[1],r[2],' not in database!')
+            print('{:s} (r{:s},p{:s}) {:s}'.format('Attempt',r[0],r[1],r[2],' not in database!'))
         for runs in originalq:
             originalstate = originalq[0]
-            print 'For unitname = %s, reqnum = %s and attnum = %s, Current state = %s' % (r[0],r[1],r[2],originalstate[0])
+            print('For unitname  {:s}, reqnum = {:s} and attnum = {:s}, Current state = {:s}'.format(r[0],r[1],r[2],originalstate[0]))
     cur.close()
     dbh.close()        
     sys.exit(1)
@@ -133,7 +134,7 @@ if args.dbupdate is True:
         cur.execute(q)
         ret = cur.fetchone()
         if ret == 0:
-            print '%s (r%s,%s,p%s) %s' % ('Attempt',r[0],r[1],r[2],' not in database!')
+            print('{:s} (r{:s},{:s},p{:s}) {:s}'.format('Attempt',r[0],r[1],r[2],' not in database!'))
             runlist.remove(r)
     
     """sql query to update db"""
@@ -151,7 +152,7 @@ if args.dbupdate is True:
                        data_state = '{newstate}' where pfw_attempt_id = {attid}".format(
                        attid=pfw_attempt_id,newstate = newstate)
         cur.execute(updatestate)
-        print "Updated %s,r%s,p%s,%s. New state = %s." % (run[0],run[1],run[2],pfw_attempt_id,newstate)
+        print("Updated {:s},r{:s},p{:s},{:d}. New state = {:s}.".format(run[0],run[1],run[2],pfw_attempt_id,newstate))
     dbh.commit()
     
 cur.close()

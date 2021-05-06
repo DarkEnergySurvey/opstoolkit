@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
 Query a series of nights to determine the calibrations observations present 
 that are appropriate for building an input list for precal and supercal pipelines.
@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     import argparse
     import os
-    from despydb import DesDbi 
+    import despydb.desdbi
     from opstoolkit import nite_strings
     import re
     import stat
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--last',     action='store', type=str, default=None, help='Last night to be included in listing')
     parser.add_argument('-m', '--max_comb', action='store', type=str, default=None, help='Maximum number of exposures to be combined into an individual supercal (default=150)')
     parser.add_argument('-n', '--num_min',  action='store', type=str, default=None, help='Minimum number of exposures to be combined (for search using -w option).  (Default not used)')
-    parser.add_argument('-o', '--output',   action='store', type=str, default=None, help='Summary listing filename (default is STDOUT)')
+    parser.add_argument('-o', '--output',   action='store', type=str, default=None, help='Optionally output expnum lists of bias and flat to {args.output}.[bias/flat].list')
     parser.add_argument('-t', '--t_crit',   action='store', type=str, default=None, help='Overhead time (in seconds) allowed for a sequence to be contiguous (Default=60)')
     parser.add_argument('-i', '--idlist',   action='store_true', default=False,     help='Do not provide exposure list but simply write list of exposure IDs (Default=False)')
     parser.add_argument('-c', '--count_only', action='store_true', default=False,   help='Do not provide exposure list but simply counts of frames found (Default=False)')
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('-S', '--Schema',   action='store', type=str, default=None, help='DB schema (do not include \'.\').')
     args = parser.parse_args()
     if (args.verbose):
-        print "Args: ",args
+        print("Args: ",args)
     
     if ((not(args.workfrom is None))and(args.num_min is None)):
         print("Error: outward search requires a value specified with --num_min (-n) ")
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
     cur = dbh.cursor()
     
     ###############################################################################
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         order by e.mjd_obs  """ % ( querylist, db_Schema, night1, night2 )
     
         if args.verbose:
-            print query
+            print(query)
         cur.arraysize = 1000 # get 1000 at a time when fetching
         cur.execute(query)
 
@@ -403,8 +403,21 @@ if __name__ == "__main__":
         if (args.verbose):
             print("# Revised list would include N exposures per cal (iter={:d})".format(iter))
             print("#   bias: {:d} ".format(num_cal[band2i["zero"]]))
-            for band in ["u","g","r","i","z","Y"]:
+            for band in ["u","g","r","i","z","Y","VR"]:
                 print("# {:1s}-flat: {:d} ".format(band,num_cal[band2i[band]]))
+
+    if (not(args.output is None)):
+        blist='{:s}.bias.list'.format(args.output)
+        flist='{:s}.flat.list'.format(args.output)
+        ff=open(flist,'w')
+        bf=open(blist,'w')
+        for exp_rec in exp_record:
+            if (exp_rec["obstype"]=="dome flat"):
+                ff.write("{:d}\n".format(exp_rec["expnum"]))
+            elif (exp_rec["obstype"]=="zero"):
+                bf.write("{:d}\n".format(exp_rec["expnum"]))
+        ff.close()
+        bf.close()
 
         
     if (args.idlist):

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 from commands import getstatusoutput
 from os import path
 from sys import exit

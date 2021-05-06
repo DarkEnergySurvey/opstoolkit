@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
 Take an input list of exposures and create a tag in EXPOSURETAG
 
@@ -33,7 +33,7 @@ Arguments:
 if __name__ == "__main__":
 
     import argparse
-    from despydb import DesDbi
+    import despydb.desdbi
     import os
     import stat
     import time
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument('--Schema',   '-S', action='store', type=str, default=None,  help='DB schema (do not include \'.\').')
     args = parser.parse_args()
     if (args.verbose):
-        print "Args: ",args
+        print("Args: ",args)
 
 
     if ((args.expnum is None)and(args.list is None)):
@@ -120,14 +120,14 @@ if __name__ == "__main__":
                     expnum_list.append(tmp_exprec)
             f1.close()
 
-    print "Formed exposure list for update: ",len(expnum_list)," exposures found."
-#    print expnum_list
+    print("Formed exposure list for update: {:d} exposures found.".format(len(expnum_list)))
+#    print(expnum_list)
 
     try:
         desdmfile = os.environ["des_services"]
     except KeyError:
         desdmfile = None
-    dbh = DesDbi(desdmfile,args.section)
+    dbh = despydb.desdbi.DesDbi(desdmfile,args.section,retry=True)
     cur = dbh.cursor()
 
 #
@@ -138,20 +138,20 @@ if __name__ == "__main__":
     
     nfound=0
     for item in cur:
-        print item
+        print(item)
         nfound=nfound+1
         if (args.verbose):
-            print "Exposure tag, %s, found!" % args.tag
-            print "Description: %s" % item[1]
+            print("Exposure tag {:s} found!".format(args.tag))
+            print("Description: {:s} ".format(item[1]))
 
     if (nfound != 1):
         if (nfound == 0):
-            print "No tag, %s, found in %sEXPOSURETAG_DEF" % (args.tag, db_Schema)
-            print "Aborting!"
+            print("No tag, {:s}, found in {:s}EXPOSURETAG_DEF".format(args.tag,db_Schema))
+            print("Aborting!")
             exit(1)
         elif (nfound > 1):
-            print "Multiple tags, %s, found in %sEXPOSURETAG_DEF? " % (args.tag, db_Schema)
-            print "Aborting!"
+            print("Multiple tags, {:s}, found in {:s}EXPOSURETAG_DEF? ".format(args.tag, db_Schema))
+            print("Aborting!")
             exit(1)
 
     DBtable='exposuretag'
@@ -174,7 +174,7 @@ if __name__ == "__main__":
         query = """select %s from %sexposure e where e.expnum=%d and e.camsym='%s' """ % ( querylist, db_Schema, exprec["expnum"], args.camsym )
     
         if args.verbose:
-            print query
+            print(query)
         cur.arraysize = 1000 # get 1000 at a time when fetching
         cur.execute(query)
 
@@ -224,12 +224,19 @@ if __name__ == "__main__":
             insert_command=db_cname+db_value
 
             if(args.updateDB):
-                cur.execute(insert_command)
+                try:
+                    cur.execute(insert_command)
+                except Exception as e:  
+                    print("   For exposure {:d} ".format(exp_rec['expnum']))
+                    print("   ",e)
+                    print("   Aborting without any commits!")
+                    exit(1)
+                    
             if (args.DB_file is not None):
                 fdbout.write("{:s};\n".format(insert_command))
 
     if(args.updateDB):
         dbh.commit()
-        print "DB update complete and committed"
+        print("DB update complete and committed")
     if (args.DB_file):
         fdbout.close()

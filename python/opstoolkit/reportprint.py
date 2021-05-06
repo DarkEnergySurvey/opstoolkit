@@ -59,7 +59,7 @@ class  prettyPrinter(object):
 
       """
       function = "{:}".format
-      if  self.fmatdict.has_key(type(thing)) : 
+      if (type(thing) in self.fmatdict):
          function  = self.fmatdict[type(thing)]
       return function(thing).strip()
 
@@ -90,7 +90,7 @@ class  prettyPrinter(object):
        but to blank pad an ascii type to produce a veritbal column
        """
 
-      widths = [self._width(col) for col in zip(*rdata)]
+      widths = [self._width(col) for col in list(zip(*rdata))]
       fmats = ' '.join(['{:>%d}' % width for width in widths ])
       return fmats
 
@@ -139,7 +139,7 @@ class  prettyPrinter(object):
       data = self._render(data)  # make elements ascii
       fmats = self._fmats(data)    # get array of padding formats)
       for row in data:
-         print fmats.format(*row)
+         print(fmats.format(*row))
 
    def csvprint(self, data):
       """ write a CSV file to stdout"""
