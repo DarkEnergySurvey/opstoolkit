@@ -406,6 +406,19 @@ if __name__ == "__main__":
             for band in ["u","g","r","i","z","Y","VR"]:
                 print("# {:1s}-flat: {:d} ".format(band,num_cal[band2i[band]]))
 
+    if (not(args.output is None)):
+        blist='{:s}.bias.list'.format(args.output)
+        flist='{:s}.flat.list'.format(args.output)
+        ff=open(flist,'w')
+        bf=open(blist,'w')
+        for exp_rec in exp_record:
+            if (exp_rec["obstype"]=="dome flat"):
+                ff.write("{:d}\n".format(exp_rec["expnum"]))
+            elif (exp_rec["obstype"]=="zero"):
+                bf.write("{:d}\n".format(exp_rec["expnum"]))
+        ff.close()
+        bf.close()
+
         
     if (args.idlist):
 #

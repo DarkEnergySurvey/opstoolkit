@@ -16,6 +16,7 @@ if __name__ == "__main__":
     import csv
     import sys
     import datetime
+    import math
     import numpy
 
     parser = argparse.ArgumentParser(description='Produce a summary listing (manifest) of observations for a night')
@@ -94,10 +95,16 @@ if __name__ == "__main__":
         if (item[coldict["e.airmass"]] is None):
             tmp_expdict["airmass"]="%6s" % ("None")
         else:
-            tmp_expdict["airmass"]="%6.3f" % float(item[coldict["e.airmass"]])
+            if (math.isnan(item[coldict["e.airmass"]])):
+                tmp_expdict["airmass"]="%6s" % ("NaN")
+            else:
+                tmp_expdict["airmass"]="%6.3f" % float(item[coldict["e.airmass"]])
         tmp_expdict["propid"]=item[coldict["e.propid"]]
         propid_list.append(item[coldict["e.propid"]])
-        tmp_expdict["object"]=item[coldict["e.object"]]
+        if (item[coldict["e.object"]] is None):
+            tmp_expdict["object"]="null"
+        else:
+            tmp_expdict["object"]=item[coldict["e.object"]]
         if (item[coldict["e.program"]]=="survey"):
             tmp_expdict["program"]='survey'
         elif (item[coldict["e.program"]]=="supernova"):
@@ -274,6 +281,7 @@ if __name__ == "__main__":
         if (len(exp_list) > 0):
             last_expnum=exp_list[0]["expnum"]-1
         for erec in exp_list:
+#            print(erec['expnum'])
             if (write_file):
                 if (last_expnum != (erec["expnum"]-1)):
                     fout.write("# \n")
@@ -282,6 +290,7 @@ if __name__ == "__main__":
             if (not(args.quiet)):
                 if (last_expnum != (erec["expnum"]-1)):
                     print("# ")
+#                print(erec["expnum"],erec["filename"],erec["dateobs"][0:21],erec["obstype"],erec["band"][0:5],erec["exptime"],erec["elast"],erec["ra"],erec["dec"],erec["airmass"],erec["program"],erec["propid"],erec["object"])
                 print(" {:10d} {:22s} {:21s} {:12s} {:6s} {:6.1f} {:7.1f} {:9.5f} {:9.5f} {:5s} {:9s}  {:10s} {:s} ".format(
                 erec["expnum"],erec["filename"],erec["dateobs"][0:21],erec["obstype"],erec["band"][0:5],erec["exptime"],erec["elast"],erec["ra"],erec["dec"],erec["airmass"],erec["program"],erec["propid"],erec["object"]))
             last_expnum=erec["expnum"]
