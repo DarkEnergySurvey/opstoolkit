@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--last',     action='store', type=str, default=None, help='Last night to be included in listing')
     parser.add_argument('-m', '--max_comb', action='store', type=str, default=None, help='Maximum number of exposures to be combined into an individual supercal (default=150)')
     parser.add_argument('-n', '--num_min',  action='store', type=str, default=None, help='Minimum number of exposures to be combined (for search using -w option).  (Default not used)')
-    parser.add_argument('-o', '--output',   action='store', type=str, default=None, help='Summary listing filename (default is STDOUT)')
+    parser.add_argument('-o', '--output',   action='store', type=str, default=None, help='Optionally output expnum lists of bias and flat to {args.output}.[bias/flat].list')
     parser.add_argument('-t', '--t_crit',   action='store', type=str, default=None, help='Overhead time (in seconds) allowed for a sequence to be contiguous (Default=60)')
     parser.add_argument('-i', '--idlist',   action='store_true', default=False,     help='Do not provide exposure list but simply write list of exposure IDs (Default=False)')
     parser.add_argument('-c', '--count_only', action='store_true', default=False,   help='Do not provide exposure list but simply counts of frames found (Default=False)')
